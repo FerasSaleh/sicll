@@ -2,8 +2,10 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.Hashtable;
+import java.math.BigInteger;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.StringTokenizer;
 import java.util.TreeSet;
@@ -11,12 +13,11 @@ import java.util.TreeSet;
 
 public class LinkerLoader {
 
-	private static int memory_start  = Integer.parseInt("2000", 16);
-	private static int cs_addr = memory_start;
+	private static BigInteger memory_start  = new BigInteger("2000");
+	private static BigInteger cs_addr = new BigInteger("2000");
 	private static int execAddr = 0;
 	private static SymTab EsTab = new SymTab();
-	//private static Program prog;
-	public static Hashtable memory = new Hashtable();
+	public static LinkedHashMap<String, String> memory = new LinkedHashMap<String, String>();
 	
 	
 	
@@ -28,6 +29,7 @@ public class LinkerLoader {
 				processLine(line);
 				line=br.readLine();
 			}
+			EsTab.printTable();
 			br.close();
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
@@ -44,6 +46,7 @@ public class LinkerLoader {
 				processLine2(line2);
 				line2=br2.readLine();
 			}
+			 printMemoryMap();
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -59,10 +62,9 @@ public class LinkerLoader {
 			str = str.substring(1);
 			StringTokenizer st = new StringTokenizer(str);
 			
-			Program prog = new Program (st.nextToken().trim(), Integer.parseInt(st.nextToken(), 16), cs_addr);
-			EsTab.insert(new Item (prog.programName, Integer.toHexString(cs_addr)));
-			cs_addr=cs_addr+prog.length;
-			System.out.println(prog + " " + Integer.toHexString(cs_addr));
+			Program prog = new Program (st.nextToken().trim(), stringToBigInt(st.nextToken()), cs_addr);
+			EsTab.insert(new Item (prog.programName, bigIntToString(cs_addr)));
+			cs_addr=cs_addr.add(prog.length);
 			return;
 		} else if (str.startsWith("D")){
 			str = str.substring(1);
@@ -72,68 +74,69 @@ public class LinkerLoader {
 				if (str.charAt(pos+1)==' ')
 					pos = pos+1;
 				Item i = new Item (str.substring(0, pos), 
-						Integer.toHexString((Integer.valueOf(str.substring(pos, pos+7).trim(),16)+cs_addr)));
+						bigIntToString(stringToBigInt(str.substring(pos, pos+7).trim()).add(cs_addr)));
 				System.out.println("Item: " + EsTab.insert(i));
 				str = str.substring(pos+7);
 			}
 		} 
+		
 	}
 	
 	public static void processLine2(String str){
 		if (str.startsWith("H")){
-			cs_addr = Integer.valueOf((EsTab.find(str.substring(1,str.indexOf(' '))).getHexValue()), 16);
-			execAddr= cs_addr;
+			cs_addr = stringToBigInt((EsTab.find((str.substring(1,str.indexOf(' '))))).getHexValue());
+			//System.out.println(cs_addr);
 		} else if (str.startsWith("T")){
-			//str = str.substring(1);
 			char[] chars = str.toCharArray();
-			LinkedList ll = new LinkedList();
-			int ptr, lineStartAddr, lineSize;
+			int ptr;
+			BigInteger lineStartAddr, lineSize;
+			StringBuilder sb = new StringBuilder();
 	        //obtain starting address
 	        String tmpStr="";
-	        for(ptr=1; ptr<7; ptr++) tmpStr += chars[ptr];
-	        lineStartAddr=Integer.parseInt(tmpStr.trim(), 16);
-	        lineStartAddr+=cs_addr;
-	        //System.out.println (Integer.toHexString(lineStartAddr));
-	        tmpStr = "";
-	        for(; ptr<9; ptr++) tmpStr += chars[ptr];
-	        lineSize=Integer.parseInt(tmpStr.trim(), 16);
-	        //System.out.println(Integer.toHexString(lineSize));
-	        //System.out.println(lineSize);
-	        for(int i=0; i< lineSize; i++){
-	            int thisByte;
+	        for(ptr=1; ptr<7; ptr++) 
+	        	sb.append(chars[ptr]);
+	        
+	        lineStartAddr=new BigInteger(sb.toString().trim(), 16);
+	        lineStartAddr = lineStartAddr.add(cs_addr);
+	       
+	        sb = new StringBuilder();
+	        
+	        for(; ptr<9; ptr++)
+	        	sb.append(chars[ptr]);
+	        lineSize=new BigInteger(sb.toString().trim(), 16);
+
+	        sb = new StringBuilder();
+	        for(int i=0; i< lineSize.intValue() ; i++){
+	            
 	            tmpStr = "";
 	            tmpStr += chars[ptr++];
 	            tmpStr += chars[ptr++];
-	            thisByte = Integer.parseInt(tmpStr.trim(), 16);
-	            ll.add(thisByte);
+	            sb.append(bigIntToString(stringToBigInt(tmpStr.trim())));
+	            
 	        }
-	        Iterator itr = ll.iterator();
-	        String objCode="";
-	        while (itr.hasNext()){
-	        	if((objCode.length() % 8) ==0)
-	        		objCode += " ";
-	        	objCode += Integer.toHexString(((Integer) itr.next()).intValue());
-	        }
-	        //System.out.println(objCode);
-	        if (!memory.containsKey(Integer.toHexString(lineStartAddr)))
-	        	memory.put(Integer.toHexString(lineStartAddr),objCode);
+	        if (!memory.containsKey((lineStartAddr)))
+	        	memory.put(lineStartAddr.toString(), sb.toString());
 	        else {
-	        	String temp = (String) memory.get(Integer.toHexString(lineStartAddr));
-	        	objCode = objCode + " " + temp;
-	        	memory.put(Integer.toHexString(lineStartAddr), objCode);
+	        	sb.append(" ");
+	        	sb.append(memory.get((lineStartAddr)));
+	        	memory.put(lineStartAddr.toString(), sb.toString());
 	        }
-	        printMemoryMap();
+	       
 		} else if ( str.startsWith("M")){
-			str = str.substring(1);
-			String tempAddr ="";
-			int tempByte =0;
+		
+			StringBuilder tempAddr = new StringBuilder();
+			BigInteger tempByte, numHalfBytes;
 			int index =0; 
-			for (index=0;index<6;index++){
-				tempAddr += str.charAt(index);
+			for (index=1;index<7;index++){
+				tempAddr.append(str.charAt(index));
 			}
-			tempByte = Integer.parseInt(tempAddr, 16);
-			//System.out.println(tempAddr);
-			//System.out.println(Integer.toHexString(tempByte));
+			tempByte = new BigInteger(tempAddr.toString(), 16);
+			tempByte = tempByte.add(cs_addr);
+			tempAddr = new StringBuilder();
+			
+			for (;index<9;index++){
+				tempAddr.append(str.charAt(index));
+			}
 			char sign=' ';
 			if (str.contains("+"))
 				sign = '+';
@@ -141,9 +144,14 @@ public class LinkerLoader {
 				sign = '-';
 			index=0;
 			index = str.indexOf(sign);
+			tempAddr = new StringBuilder();
 			Item i = EsTab.find(str.substring(index+1));
-			//System.out.println(i);
+			if (i != null){
+				System.out.println(str.substring(7, index));
+			}
+				
 		}
+		
 		
 	}
 	private static void printMemoryMap(){
@@ -151,15 +159,53 @@ public class LinkerLoader {
 		Iterator itr = ts.iterator();
 		while (itr.hasNext()){
 			String str = (String) itr.next();
-			System.out.printf(" %s : %s \n", str, memory.get(str));
+			StringBuilder sb = new StringBuilder();
+			String temp = memory.get(str);
+			while (temp.length()> 0){
+				if (temp.length() < 8){
+					sb.append(temp);
+					continue;
+				}
+					
+				sb.append(temp.substring(0,8));
+				sb.append(" ");
+				temp = temp.substring(8);
+			}
+			System.out.printf(" %x : %s \n", stringToBigInt(str), sb.toString());
+			//System.out.println(str + " : "+ memory.get(str));
 		}
 	}
 
-	private static String addHexStrings(String s1, String s2){
+	/*public static String addHexStrings(String s1, String s2){
 		return Integer.toHexString((Integer.valueOf(s1, 16)+Integer.valueOf(s2, 16)));
 	}
-	private static String addCSADDR(String s1){
+	public static String addCSADDR(String s1){
 		return Integer.toHexString((Integer.valueOf(s1, 16)+cs_addr));
+	}*/
+	public static String bigIntToString(BigInteger bi){
+		String s = bi.toString(16);            
+	    if (s.length() % 2 != 0) {
+	        s = "0"+s;
+	    }
+	    return s;
 	}
-	
+	public static String intToString(int i){
+		BigInteger bi = new BigInteger(Integer.toString(i));
+		String s = bi.toString(16);            
+	    if (s.length() % 2 != 0) {
+	        s = "0"+s;
+	    }
+	    return s;
+	}
+	public static int intFromString(String s){
+		BigInteger bi = new BigInteger(s.getBytes());
+	    return bi.intValue();
+	}
+	public static int intFromString(String s, int i){
+		BigInteger bi = new BigInteger(s,i);
+	    return bi.intValue();
+	}
+	public static BigInteger stringToBigInt(String str){
+		return  new BigInteger(str, 16);
+	}
 }
