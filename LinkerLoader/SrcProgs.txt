@@ -1,0 +1,119 @@
+
+0000  progc   start   0
+              extdef  listc,endc
+              extref  lista,enda,listb,endb
+0000  pgc     word    1
+0003          word    2
+0006          word    3
+0009          word    4
+000C          word    5
+000F          word    6
+0012          word    7
+0015          word    8
+0018  ref1   +lda     lista
+001C  ref2   +ldt     listb+4
+0020  ref3   +ldx     #enda-lista
+0024          word    9 
+0027          word    16
+002A          word    17
+002D          word    18
+0030  listc   word    19
+0033          word    20
+0036          word    21
+0039          word    22
+003C          word    23
+003F          word    24
+0042  endc    equ     *
+0042          word    25
+0045  ref4    word    enda-lista+listc
+0048          byte    x'01'
+0049  ref5    word    endc-listc+10
+004C          byte    x'02'
+004D  ref6    word    endc-listc+lista+1 
+0050          byte    x'03'
+0051  ref7    word    enda-lista+(endb-listb)
+              end     
+
+0000  progb   start   0
+              extdef  listb,endb
+              extref  lista,enda,listc,endc
+0000  pgb     word    1
+0003          word    2
+0006          word    3
+0009          word    4
+000C          word    5
+000F          word    6
+0012          word    7
+0015          word    8
+0018          word    9
+001B          word    16
+001E          word    17
+0021          word    18
+0024  ref1   +lda     lista
+0028  ref2   +ldx     #enda-lista
+002C  ref3    ldt     listb+4
+002F          word    19
+0032          word    20
+0035  listb   word    21
+0038          word    22
+003B          word    23
+003E          word    24
+0041          word    25
+0044          word    32
+0047          word    33
+004A          word    34
+004D  endb    equ     *
+004D  ref4    word    enda-lista+listc
+0050          byte    x'01'
+0051  ref5    word    endc-listc+10
+0054          byte    x'02'
+0055  ref6    word    endc-listc+lista+1
+0058          byte    x'03'
+0059  ref7    word    enda-lista+(endb-listb)
+              end
+
+0000  proga   start   0
+              extdef  lista,enda
+              extref  listb,endb,listc,endc
+0000  pga     word    1
+0003          word    2
+0006          word    3
+0009          word    4
+000C          word    5
+000F          word    6
+0012          word    7
+0015          word    8
+0018          word    9
+001B          word    16
+001E          byte    x'01'
+001F          byte    x'02'
+0020  ref1   +ldt     listb+4
+0024  ref2    lda     lista
+0027  ref3    ldx     #enda-lista
+002A          word    17
+002D          word    18
+0030          word    19
+0033          word    20
+0036          word    21
+0039          word    22
+003C          word    23
+003F          byte    x'03'
+0040  lista   word    24
+0043          word    25
+0046          word    32
+0049          word    33
+004C          word    34
+004F          word    35
+0052          byte    x'04'
+0053          byte    x'05'
+0054  enda    equ     *
+0054          byte    x'06'
+0055  ref4    word    enda-lista+listc
+0058          byte    x'07'
+0059  ref5    word    endc-listc+10
+005C          byte    x'08'
+005D  ref6    word    endc-listc+lista+1
+0060          byte    x'09'
+0061  ref7    word    enda-lista+(endb-listb)
+              end     ref1
+
