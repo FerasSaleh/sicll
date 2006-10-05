@@ -2,15 +2,11 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.StringTokenizer;
-import java.util.regex.MatchResult;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.TreeSet;
 
 
 public class LinkerLoader {
@@ -97,7 +93,7 @@ public class LinkerLoader {
 	        for(ptr=1; ptr<7; ptr++) tmpStr += chars[ptr];
 	        lineStartAddr=Integer.parseInt(tmpStr.trim(), 16);
 	        lineStartAddr+=cs_addr;
-	        System.out.println (Integer.toHexString(lineStartAddr));
+	        //System.out.println (Integer.toHexString(lineStartAddr));
 	        tmpStr = "";
 	        for(; ptr<9; ptr++) tmpStr += chars[ptr];
 	        lineSize=Integer.parseInt(tmpStr.trim(), 16);
@@ -114,6 +110,8 @@ public class LinkerLoader {
 	        Iterator itr = ll.iterator();
 	        String objCode="";
 	        while (itr.hasNext()){
+	        	if((objCode.length() % 8) ==0)
+	        		objCode += " ";
 	        	objCode += Integer.toHexString(((Integer) itr.next()).intValue());
 	        }
 	        //System.out.println(objCode);
@@ -149,9 +147,10 @@ public class LinkerLoader {
 		
 	}
 	private static void printMemoryMap(){
-		Enumeration enumer = memory.keys();
-		while (enumer.hasMoreElements()){
-			String str = (String) enumer.nextElement();
+		TreeSet ts = new TreeSet(memory.keySet());
+		Iterator itr = ts.iterator();
+		while (itr.hasNext()){
+			String str = (String) itr.next();
 			System.out.printf(" %s : %s \n", str, memory.get(str));
 		}
 	}
