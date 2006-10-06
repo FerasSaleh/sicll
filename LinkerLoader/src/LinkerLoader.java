@@ -14,7 +14,7 @@ public class LinkerLoader {
 
 	private static BigInteger cs_addr = new BigInteger("2000");
 
-	private static int execAddr = 0;
+	private static BigInteger execAddr = new BigInteger("2000");
 
 	private static SymTab EsTab = new SymTab();
 
@@ -160,6 +160,13 @@ public class LinkerLoader {
 		         } catch (HolderException he){
 		        	 System.out.println("Sorry, failed to modify the record");
 		         }
+			}
+		} else if (str.startsWith("E")) {
+			System.out.println("Thank the lord, another compilation unit down");
+			str = str.substring(1);
+			if (str.length() != 0){
+				execAddr = new BigInteger(str, 16);
+				execAddr = execAddr.add(cs_addr);
 			}
 		}
 
