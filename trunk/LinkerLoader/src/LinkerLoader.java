@@ -149,12 +149,18 @@ public class LinkerLoader {
 				sign = '-';
 			index = 0;
 			index = str.indexOf(sign);
+			numHalfBytes = new BigInteger(tempAddr.toString());
 			tempAddr = new StringBuilder();
 			Item i = EsTab.find(str.substring(index + 1));
 			if (i != null) {
-				//System.out.println(str.substring(7, index));
+				 BigInteger numBytes = numHalfBytes.add(new BigInteger("1")).divide(new BigInteger("2"));
+		         try{
+		        	 modifyRecord(tempByte, numBytes, i);		            	
+		        	 
+		         } catch (HolderException he){
+		        	 System.out.println("Sorry, failed to modify the record");
+		         }
 			}
-
 		}
 
 	}
@@ -181,6 +187,39 @@ public class LinkerLoader {
 					.printf(" %x : %s \n", stringToBigInt(str), sb.toString());
 			// System.out.println(str + " : "+ memory.get(str));
 		}
+	}
+	
+	private static void modifyRecord(BigInteger b1, BigInteger b2, Item rep){
+		TreeSet<String> ts = new TreeSet<String>(memory.keySet());
+		Iterator<String> itr = ts.iterator();
+		BigInteger holder = null;
+		while (itr.hasNext()) {
+			BigInteger temp = new BigInteger(itr.next());
+			if(temp.compareTo(b1) <= 0){
+				holder = temp;
+			} else {
+				if (holder == null)
+					holder = temp;
+				continue; 
+					
+			}
+				
+		}
+		if (holder == null)
+			throw new HolderException();
+		
+		//StringBuilder sb = new StringBuilder();
+		String sb = (memory.get(holder.toString()));
+		BigInteger diff = b1.subtract(holder);
+		//System.out.println(sb.toString());
+		int i2 = 0;
+		//System.out.println(diff.intValue() + " " + b1.intValue());
+		for(int i=diff.intValue(); i<(diff.intValue()+b2.intValue()); i++){
+			sb=sb.replace(sb.charAt(i), rep.getHexValue().charAt(i2) );
+			i2++;
+		}
+		//System.out.println(sb.toString());
+		
 	}
 
 	/*
