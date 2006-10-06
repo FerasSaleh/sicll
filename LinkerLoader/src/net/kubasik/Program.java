@@ -1,3 +1,4 @@
+package net.kubasik;
 import java.math.BigInteger;
 
 public class Program {
