@@ -1,0 +1,1 @@
+A relatively simple Linker and Loader for the SIC / SIC/XE assembly language. Written in Java for portability and general educational purposes.
